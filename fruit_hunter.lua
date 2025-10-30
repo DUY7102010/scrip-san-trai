@@ -1,45 +1,25 @@
+
 repeat wait() until game:IsLoaded()
 wait(1)
 
--- 🍎 Hiển thị trái ác quỷ (ESP)
-local camera = workspace.CurrentCamera
+-- ✅ In ra để kiểm tra script có chạy lại không
+print("✅ Script đã chạy lại sau khi chuyển server")
+
+-- 🍎 Quét trái ác quỷ
 local danhSachLoaiTru = {
     ["Banana"] = true, ["Apple"] = true, ["Strawberry"] = true,
     ["Pineapple"] = true, ["Mushroom"] = true, ["Lemon"] = true,
     ["Watermelon"] = true, ["Kilo Fruit"] = true
 }
 
-local function taoESP(trai)
-    if trai:FindFirstChild("Handle") and not trai.Handle:FindFirstChild("FruitESP") then
-        local esp = Instance.new("BillboardGui", trai.Handle)
-        esp.Name = "FruitESP"
-        esp.Size = UDim2.new(0, 150, 0, 30)
-        esp.StudsOffset = Vector3.new(0, 2, 0)
-        esp.AlwaysOnTop = true
-
-        local label = Instance.new("TextLabel", esp)
-        label.Size = UDim2.new(1, 0, 1, 0)
-        label.BackgroundTransparency = 1
-        label.TextColor3 = Color3.fromRGB(255, 255, 0)
-        label.TextScaled = true
-        label.Font = Enum.Font.SourceSansBold
-        label.Text = trai.Name
-    end
-end
-
-local function quetTrai()
+local function timTrai()
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") and not danhSachLoaiTru[obj.Name] then
-            taoESP(obj)
+            return obj
         end
     end
+    return nil
 end
-
-workspace.DescendantAdded:Connect(function(obj)
-    if obj:IsA("Tool") and obj:FindFirstChild("Handle") and not danhSachLoaiTru[obj.Name] then
-        taoESP(obj)
-    end
-end)
 
 -- 🛸 Bay đến trái
 local TweenService = game:GetService("TweenService")
@@ -58,16 +38,7 @@ local function bayDenTrai(trai)
     tween:Play()
 end
 
-local function timTrai()
-    for _, obj in pairs(workspace:GetDescendants()) do
-        if obj:IsA("Tool") and obj:FindFirstChild("Handle") and not danhSachLoaiTru[obj.Name] then
-            return obj
-        end
-    end
-    return nil
-end
-
--- 🔁 Tự chuyển server nếu không có trái
+-- 🔁 Chuyển server nếu không có trái
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local PlaceId = game.PlaceId
@@ -103,31 +74,26 @@ local function layServerMoi()
     end
 end
 
--- 🔁 Tự chạy lại sau khi chuyển server (nếu executor hỗ trợ)
+-- 🔁 Tự chạy lại sau khi chuyển server
 local scriptTaiLai = [[
 repeat wait() until game:IsLoaded()
-loadstring(game:HttpGet("https://pastebin.com/raw/YOUR_ID"))()
+loadstring(game:HttpGet("https://raw.githubusercontent.com/DUY7102010/scrip-san-trai/main/fruit_hunter.lua"))()
 ]]
 
--- 🧠 Hàm chính
-local function batDau()
-    quetTrai()
-    local trai = timTrai()
-    if trai then
-        print("✅ Tìm thấy trái:", trai.Name)
-        bayDenTrai(trai)
-    else
-        print("🔁 Không có trái, chuyển server...")
-        local idMoi = layServerMoi()
-        if idMoi then
-            if queue_on_teleport then
-                queue_on_teleport(scriptTaiLai)
-            end
-            TeleportService:TeleportToPlaceInstance(PlaceId, idMoi, nguoiChoi)
-        else
-            warn("⚠️ Không tìm được server phù hợp.")
+-- 🧠 Bắt đầu
+local trai = timTrai()
+if trai then
+    print("✅ Tìm thấy trái:", trai.Name)
+    bayDenTrai(trai)
+else
+    print("🔁 Không có trái, chuyển server...")
+    local serverId = layServerMoi()
+    if serverId then
+        if queue_on_teleport then
+            queue_on_teleport(scriptTaiLai)
         end
+        TeleportService:TeleportToPlaceInstance(PlaceId, serverId, nguoiChoi)
+    else
+        warn("❌ Không tìm được server phù hợp.")
     end
 end
-
-batDau()
