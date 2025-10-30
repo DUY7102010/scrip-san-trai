@@ -39,7 +39,7 @@ local function bayDenTrai(trai)
     tween:Play()
 end
 
--- 🔁 Lấy server mới
+-- 🔁 Lấy server mới có slot trống
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local PlaceId = game.PlaceId
@@ -47,11 +47,11 @@ local PlaceId = game.PlaceId
 local function layServerMoi()
     local danhSach = {}
     local cursor = ""
-    local thanhCong, phanHoi
+    local soLanThu = 0
 
     repeat
         local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
-        thanhCong, phanHoi = pcall(function()
+        local thanhCong, phanHoi = pcall(function()
             return HttpService:JSONDecode(game:HttpGet(url))
         end)
 
@@ -63,11 +63,13 @@ local function layServerMoi()
             end
             cursor = phanHoi.nextPageCursor or ""
         else
-            warn("⚠️ Không thể lấy danh sách server.")
-            return nil
+            warn("⚠️ Không thể lấy danh sách server. Thử lại...")
+            wait(2)
+            soLanThu += 1
         end
-    until cursor == "" or #danhSach > 0
+    until cursor == "" or #danhSach > 0 or soLanThu >= 3
 
+    print("🔍 Số server phù hợp tìm được:", #danhSach)
     if #danhSach > 0 then
         return danhSach[math.random(1, #danhSach)]
     else
