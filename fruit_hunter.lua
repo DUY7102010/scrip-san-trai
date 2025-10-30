@@ -39,7 +39,7 @@ local function bayDenTrai(trai)
     tween:Play()
 end
 
--- 🔁 Lấy server mới có slot trống (có retry và thông báo)
+-- 🔁 Lấy server mới có slot trống (sửa lỗi API với limit=50)
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local PlaceId = game.PlaceId
@@ -51,7 +51,7 @@ local function layServerMoi()
     local maxThu = 3
 
     repeat
-        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
+        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?limit=50&sortOrder=Desc" .. (cursor ~= "" and "&cursor=" .. cursor or "")
         print("📡 Đang gọi API:", url)
 
         local thanhCong, phanHoi = pcall(function()
