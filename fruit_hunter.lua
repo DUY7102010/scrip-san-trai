@@ -105,24 +105,28 @@ repeat wait() until game:IsLoaded()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/DUY7102010/scrip-san-trai/main/fruit_hunter.lua"))()
 ]]
 
--- 🚀 Bắt đầu quá trình
-chonHaiQuan()
-local trai = timTrai()
-if trai then
-    print("✅ Tìm thấy trái:", trai.Name)
-    taoESP(trai)
-    bayDenTrai(trai)
-    wait(2)
-    nhatTrai(trai)
-else
-    print("🔁 Không có trái, chuyển server...")
-    local serverId = layServerMoi()
-    if serverId then
-        if queue_on_teleport then
-            queue_on_teleport(scriptTaiLai)
-        end
-        TeleportService:TeleportToPlaceInstance(PlaceId, serverId)
+-- 🔄 Vòng lặp săn trái
+local function batDauSanTrai()
+    chonHaiQuan()
+    local trai = timTrai()
+    if trai then
+        print("✅ Tìm thấy trái:", trai.Name)
+        taoESP(trai)
+        bayDenTrai(trai)
+        wait(2)
+        nhatTrai(trai)
     else
-        warn("❌ Không tìm được server phù hợp.")
+        print("🔁 Không có trái, chuyển server...")
+        local serverId = layServerMoi()
+        if serverId then
+            if queue_on_teleport then
+                queue_on_teleport(scriptTaiLai)
+            end
+            TeleportService:TeleportToPlaceInstance(PlaceId, serverId)
+        else
+            warn("❌ Không tìm được server phù hợp.")
+        end
     end
 end
+
+batDauSanTrai()
