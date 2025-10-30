@@ -69,34 +69,26 @@ local function chonHaiQuan()
     end
 end
 
--- 🔁 Lấy server mới
+-- 🔁 Lấy danh sách server bất kỳ
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local PlaceId = game.PlaceId
 
-local function layServerMoi()
+local function layDanhSachServer()
+    local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?limit=50&sortOrder=Desc"
+    local thanhCong, phanHoi = pcall(function()
+        return HttpService:JSONDecode(game:HttpGet(url))
+    end)
+
     local danhSach = {}
-    local cursor = ""
-    local soLanThu = 0
-    repeat
-        local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?limit=50&sortOrder=Desc" .. (cursor ~= "" and "&cursor=" .. cursor or "")
-        local thanhCong, phanHoi = pcall(function()
-            return HttpService:JSONDecode(game:HttpGet(url))
-        end)
-        if thanhCong and phanHoi and phanHoi.data then
-            for _, server in pairs(phanHoi.data) do
-                if server.playing < server.maxPlayers and server.id ~= game.JobId then
-                    table.insert(danhSach, server.id)
-                end
+    if thanhCong and phanHoi and phanHoi.data then
+        for _, server in pairs(phanHoi.data) do
+            if server.id ~= game.JobId then
+                table.insert(danhSach, server.id)
             end
-            cursor = phanHoi.nextPageCursor or ""
-        else
-            warn("⚠️ Lỗi khi gọi API. Thử lại...")
-            wait(2)
-            soLanThu += 1
         end
-    until cursor == "" or #danhSach > 0 or soLanThu >= 3
-    return #danhSach > 0 and danhSach[math.random(1, #danhSach)] or nil
+    end
+    return danhSach
 end
 
 -- 🔁 Script chạy lại sau khi chuyển server
@@ -104,6 +96,38 @@ local scriptTaiLai = [[
 repeat wait() until game:IsLoaded()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/DUY7102010/scrip-san-trai/main/fruit_hunter.lua"))()
 ]]
+
+-- 🚀 Spam chuyển server đến khi vào được
+local function spamChuyenServer()
+    local danhSach = layDanhSachServer()
+    if #danhSach == 0 then
+        warn("❌ Không có server nào để chuyển.")
+        wait(3)
+        spamChuyenServer()
+        return
+    end
+
+    for _, serverId in pairs(danhSach) do
+        print("🔁 Thử chuyển đến server:", serverId)
+        local thanhCong = pcall(function()
+            if queue_on_teleport then
+                queue_on_teleport(scriptTaiLai)
+            end
+            TeleportService:TeleportToPlaceInstance(PlaceId, serverId)
+        end)
+
+        if thanhCong then
+            return
+        else
+            warn("⚠️ Server đầy hoặc lỗi. Thử server tiếp theo...")
+            wait(1)
+        end
+    end
+
+    warn("🚫 Đã thử hết danh sách server nhưng không vào được. Thử lại sau...")
+    wait(3)
+    spamChuyenServer()
+end
 
 -- 🔄 Vòng lặp săn trái
 local function batDauSanTrai()
@@ -117,15 +141,7 @@ local function batDauSanTrai()
         nhatTrai(trai)
     else
         print("🔁 Không có trái, chuyển server...")
-        local serverId = layServerMoi()
-        if serverId then
-            if queue_on_teleport then
-                queue_on_teleport(scriptTaiLai)
-            end
-            TeleportService:TeleportToPlaceInstance(PlaceId, serverId)
-        else
-            warn("❌ Không tìm được server phù hợp.")
-        end
+        spamChuyenServer()
     end
 end
 
