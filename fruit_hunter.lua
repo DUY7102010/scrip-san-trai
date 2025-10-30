@@ -1,17 +1,18 @@
-
+-- ⏳ Đợi game tải xong
 repeat wait() until game:IsLoaded()
 wait(1)
 
--- ✅ In ra để kiểm tra script có chạy lại không
+-- ✅ Kiểm tra script có chạy lại không
 print("✅ Script đã chạy lại sau khi chuyển server")
 
--- 🍎 Quét trái ác quỷ
+-- 🍎 Danh sách trái không cần nhặt
 local danhSachLoaiTru = {
     ["Banana"] = true, ["Apple"] = true, ["Strawberry"] = true,
     ["Pineapple"] = true, ["Mushroom"] = true, ["Lemon"] = true,
     ["Watermelon"] = true, ["Kilo Fruit"] = true
 }
 
+-- 🔍 Tìm trái ác quỷ trong workspace
 local function timTrai()
     for _, obj in pairs(workspace:GetDescendants()) do
         if obj:IsA("Tool") and obj:FindFirstChild("Handle") and not danhSachLoaiTru[obj.Name] then
@@ -21,7 +22,7 @@ local function timTrai()
     return nil
 end
 
--- 🛸 Bay đến trái
+-- 🛸 Bay đến vị trí trái
 local TweenService = game:GetService("TweenService")
 local nguoiChoi = game.Players.LocalPlayer
 
@@ -38,7 +39,7 @@ local function bayDenTrai(trai)
     tween:Play()
 end
 
--- 🔁 Chuyển server nếu không có trái
+-- 🔁 Lấy server mới
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local PlaceId = game.PlaceId
@@ -74,13 +75,13 @@ local function layServerMoi()
     end
 end
 
--- 🔁 Tự chạy lại sau khi chuyển server
+-- 🔁 Script chạy lại sau khi chuyển server
 local scriptTaiLai = [[
 repeat wait() until game:IsLoaded()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/DUY7102010/scrip-san-trai/main/fruit_hunter.lua"))()
 ]]
 
--- 🧠 Bắt đầu
+-- 🧠 Bắt đầu săn trái
 local trai = timTrai()
 if trai then
     print("✅ Tìm thấy trái:", trai.Name)
@@ -92,7 +93,7 @@ else
         if queue_on_teleport then
             queue_on_teleport(scriptTaiLai)
         end
-        TeleportService:TeleportToPlaceInstance(PlaceId, serverId, nguoiChoi)
+        TeleportService:TeleportToPlaceInstance(PlaceId, serverId)
     else
         warn("❌ Không tìm được server phù hợp.")
     end
