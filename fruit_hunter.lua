@@ -1,4 +1,3 @@
-
 -- ⏳ Đợi game tải xong
 repeat wait() until game:IsLoaded()
 wait(1)
@@ -40,7 +39,7 @@ local function bayDenTrai(trai)
     tween:Play()
 end
 
--- 🔁 Lấy server mới có slot trống
+-- 🔁 Lấy server mới có slot trống (có retry và thông báo)
 local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local PlaceId = game.PlaceId
@@ -49,9 +48,12 @@ local function layServerMoi()
     local danhSach = {}
     local cursor = ""
     local soLanThu = 0
+    local maxThu = 3
 
     repeat
         local url = "https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?limit=100" .. (cursor ~= "" and "&cursor=" .. cursor or "")
+        print("📡 Đang gọi API:", url)
+
         local thanhCong, phanHoi = pcall(function()
             return HttpService:JSONDecode(game:HttpGet(url))
         end)
@@ -64,16 +66,17 @@ local function layServerMoi()
             end
             cursor = phanHoi.nextPageCursor or ""
         else
-            warn("⚠️ Không thể lấy danh sách server. Thử lại...")
+            warn("⚠️ Lỗi khi gọi API. Thử lại lần " .. (soLanThu + 1))
             wait(2)
             soLanThu += 1
         end
-    until cursor == "" or #danhSach > 0 or soLanThu >= 3
+    until cursor == "" or #danhSach > 0 or soLanThu >= maxThu
 
     print("🔍 Số server phù hợp tìm được:", #danhSach)
     if #danhSach > 0 then
         return danhSach[math.random(1, #danhSach)]
     else
+        warn("❌ Không tìm được server phù hợp sau " .. maxThu .. " lần thử.")
         return nil
     end
 end
@@ -98,6 +101,6 @@ else
         end
         TeleportService:TeleportToPlaceInstance(PlaceId, serverId)
     else
-        warn("❌ Không tìm được server phù hợp.")
+        warn("🚫 Không thể chuyển server. Dừng script.")
     end
 end
