@@ -45,21 +45,69 @@ local function nhat(trai)
 end
 
 -- 👁️ ESP trái
-local function taoESP(trai)
-    if trai and trai:FindFirstChild("Handle") and not trai.Handle:FindFirstChild("ESP") then
-        local esp = Instance.new("BillboardGui", trai.Handle)
-        esp.Name = "ESP"
-        esp.Size = UDim2.new(0, 100, 0, 40)
-        esp.AlwaysOnTop = true
-        esp.StudsOffset = Vector3.new(0, 2, 0)
-        local text = Instance.new("TextLabel", esp)
-        text.Size = UDim2.new(1, 0, 1, 0)
-        text.BackgroundTransparency = 1
-        text.Text = "🍒 " .. trai.Name
-        text.TextColor3 = Color3.new(1, 0, 0)
-        text.TextScaled = true
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- Danh sách màu theo độ hiếm
+local fruitColors = {
+    ["Dragon Fruit"] = Color3.fromRGB(255, 0, 0), -- Legendary
+    ["Leopard Fruit"] = Color3.fromRGB(255, 85, 0), -- Legendary
+    ["Dough Fruit"] = Color3.fromRGB(255, 170, 0), -- Mythical
+    ["Light Fruit"] = Color3.fromRGB(255, 255, 0), -- Rare
+    ["Flame Fruit"] = Color3.fromRGB(255, 100, 0), -- Common
+    ["Bomb Fruit"] = Color3.fromRGB(200, 200, 200), -- Common
+}
+
+-- Hàm tạo ESP
+local function createESP(obj)
+    if not obj:IsA("Tool") or not obj:FindFirstChild("Handle") then return end
+    if obj.Handle:FindFirstChild("ESP") then return end
+
+    local gui = Instance.new("BillboardGui")
+    gui.Name = "ESP"
+    gui.Size = UDim2.new(0, 100, 0, 40)
+    gui.AlwaysOnTop = true
+    gui.StudsOffset = Vector3.new(0, 2, 0)
+    gui.Adornee = obj.Handle
+    gui.Parent = obj.Handle
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = "🍒 " .. obj.Name
+    label.TextColor3 = fruitColors[obj.Name] or Color3.new(1, 1, 1)
+    label.TextScaled = true
+    label.TextStrokeTransparency = 0
+    label.Font = Enum.Font.SourceSansBold
+    label.Parent = gui
+
+    -- Cập nhật khoảng cách theo thời gian thực
+    RunService.RenderStepped:Connect(function()
+        if obj and obj.Parent and obj:FindFirstChild("Handle") then
+            local distance = (LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart") and (obj.Handle.Position - LocalPlayer.Character.HumanoidRootPart.Position).Magnitude) or 0
+            label.Text = string.format("🍒 %s\n📏 %.0f m", obj.Name, distance)
+        else
+            gui:Destroy()
+        end
+    end)
+end
+
+-- Quét trái hiện có
+for _, v in pairs(workspace:GetChildren()) do
+    if v:IsA("Tool") and v:FindFirstChild("Handle") then
+        createESP(v)
     end
 end
+
+-- Theo dõi trái mới xuất hiện
+workspace.ChildAdded:Connect(function(v)
+    if v:IsA("Tool") and v:FindFirstChild("Handle") then
+        wait(0.2) -- đợi trái load xong
+        createESP(v)
+    end
+end)
 
 -- ⚓ Chọn Hải quân
 local function chonHaiQuan()
